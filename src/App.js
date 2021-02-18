@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
 
-function TodoList({ todo, index, completeTodo, removeTodo }) {
+function TodoList({ todo, index, editTodo, completeTodo, removeTodo, editValue }) {
   return (
     <div
       className="todo"
@@ -11,10 +11,18 @@ function TodoList({ todo, index, completeTodo, removeTodo }) {
           opacity: todo.isCompleted ? "0.5" : ""
         }
       }>
-      {todo.text}
+
+      {!todo.isEdit && (
+        <div>{todo.text}</div>
+      )}
+
+      {todo.isEdit && (
+        <input type="text" value={todo.text} onChange={e => editValue(e.target.value, index)} />
+      )}
       <div>
-        <button className="complete-btn" disabled={todo.isCompleted} onClick={() => completeTodo(index)}>Complete</button>
-        <button className="delete-btn" onClick={() => removeTodo(index)}>Delete</button>
+        <button className="complete-btn" disabled={todo.isEdit} onClick={() => completeTodo(index)}>{todo.isCompleted ? 'Uncheck' : 'Check'}</button>
+        <button className="edit-btn" disabled={todo.isCompleted} onClick={() => editTodo(index)}>{todo.isEdit ? 'OK' : 'Edit'}</button>
+        <button className="delete-btn" disabled={todo.isEdit} onClick={() => removeTodo(index)}>Delete</button>
       </div>
     </div>
   );
@@ -46,18 +54,22 @@ function InputForm({ addTodo }) {
 }
 
 function App() {
+
   const [todos, setTodos] = useState([
     {
       text: "Relax and Sleep",
-      isCompleted: false
+      isCompleted: false,
+      isEdit: false
     },
     {
       text: "Enjoy eating",
-      isCompleted: false
+      isCompleted: false,
+      isEdit: false
     },
     {
       text: "Wake up",
-      isCompleted: true
+      isCompleted: true,
+      isEdit: false
     }
   ]);
 
@@ -76,9 +88,28 @@ function App() {
     });
   };
 
+  const editTodo = index => {
+    const newTodos = [...todos];
+    newTodos[index].isEdit = !newTodos[index].isEdit;
+    setTodos(() => {
+      window.localStorage.setItem("todoList", JSON.stringify(newTodos));
+      return newTodos
+    });
+  };
+
+  const editValue = (text, index) => {
+    const newTodos = [...todos];
+    newTodos[index].text = text;
+    setTodos(() => {
+      window.localStorage.setItem("todoList", JSON.stringify(newTodos));
+      return newTodos
+    });
+  };
+
+
   const completeTodo = index => {
     const newTodos = [...todos];
-    newTodos[index].isCompleted = true;
+    newTodos[index].isCompleted = !newTodos[index].isCompleted;
     setTodos(() => {
       window.localStorage.setItem("todoList", JSON.stringify(newTodos));
       return newTodos
@@ -110,8 +141,10 @@ function App() {
               key={index}
               index={index}
               todo={todo}
+              editTodo={editTodo}
               completeTodo={completeTodo}
               removeTodo={removeTodo}
+              editValue={editValue}
             />
           ))}
 
